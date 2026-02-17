@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Liste des transactions{% endblock %}
+
+{% block content %}
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-history me-2"></i>Toutes les transactions</h5>
+            <a href="{% url 'ajouter_transaction' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Nouvelle transaction
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Catégorie</th>
+                        <th>Description</th>
+                        <th>Montant</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ transaction.reference }}</span></td>
+                        <td>{{ transaction.date_transaction|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <span class="badge {% if transaction.type_transaction == 'RECETTE' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ transaction.get_type_transaction_display }}
+                            </span>
+                        </td>
+                        <td>{{ transaction.get_categorie_display }}</td>
+                        <td>{{ transaction.description|truncatechars:30 }}</td>
+                        <td class="fw-bold {% if transaction.type_transaction == 'RECETTE' %}text-success{% else %}text-danger{% endif %}">
+                            {{ transaction.montant }} TND
+                        </td>
+                        <td>
+                            {% if transaction.type_transaction == 'RECETTE' or transaction.type_transaction == 'DEPENSE' %}
+                            <a href="{% url 'generer_recu' transaction.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-file-invoice"></i> Reçu
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucune transaction trouvée</p>
+                            <a href="{% url 'ajouter_transaction' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus-circle me-2"></i>Créer une transaction
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

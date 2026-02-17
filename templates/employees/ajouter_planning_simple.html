@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}Ajouter un horaire pour {{ employe.nom }} {{ employe.prenom }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Nouvel horaire pour {{ employe.nom }} {{ employe.prenom }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Informations de l'employé -->
+                <div class="alert alert-info mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Matricule:</strong> {{ employe.matricule }}<br>
+                            <strong>Poste:</strong> {{ employe.poste_display }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Téléphone:</strong> {{ employe.telephone }}<br>
+                            <strong>Email:</strong> {{ employe.email|default:"-" }}
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Date <span class="text-danger">*</span></label>
+                            <input type="date" name="date" class="form-control" 
+                                   value="{{ form.date.value|date:'Y-m-d'|default:request.GET.date }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Heure de début <span class="text-danger">*</span></label>
+                            <input type="time" name="heure_debut" class="form-control" 
+                                   value="{{ form.heure_debut.value|time:'H:i'|default:'09:00' }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Heure de fin <span class="text-danger">*</span></label>
+                            <input type="time" name="heure_fin" class="form-control" 
+                                   value="{{ form.heure_fin.value|time:'H:i'|default:'17:00' }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Notes (optionnel)</label>
+                        <textarea name="notes" class="form-control" rows="2" 
+                                  placeholder="Ex: Matinée, Après-midi, Travail à distance...">{{ form.notes.value|default:'' }}</textarea>
+                    </div>
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Erreurs:</strong>
+                        <ul>
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li>{{ field }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Enregistrer l'horaire
+                        </button>
+                        <a href="{% url 'planning_simple' employe.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Aide -->
+        <div class="card mt-3">
+            <div class="card-body bg-light">
+                <h6><i class="fas fa-info-circle me-2"></i>Conseils</h6>
+                <ul class="small mb-0">
+                    <li>L'heure de début doit être inférieure à l'heure de fin</li>
+                    <li>Vous pouvez ajouter plusieurs horaires pour la même journée</li>
+                    <li>Les notes sont optionnelles (ex: "Télétravail", "Formation", etc.)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

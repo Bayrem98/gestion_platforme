@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}Générer un reçu{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Générer un reçu</h5>
+            </div>
+            <div class="card-body">
+                <!-- Informations de la transaction -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">Détails de la transaction</h6>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Référence:</strong> {{ transaction.reference }}<br>
+                            <strong>Date:</strong> {{ transaction.date_transaction|date:"d/m/Y H:i" }}<br>
+                            <strong>Montant:</strong> <span class="fw-bold text-danger">{{ transaction.montant }} TND</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Type:</strong> {{ transaction.get_type_transaction_display }}<br>
+                            <strong>Catégorie:</strong> {{ transaction.get_categorie_display }}<br>
+                            <strong>Caisse:</strong> {{ transaction.caisse.nom }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formulaire du reçu -->
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Ce reçu sera enregistré et pourra être imprimé ou téléchargé au format PDF.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-file-invoice me-2"></i>Générer le reçu
+                        </button>
+                        <a href="{% url 'liste_transactions' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

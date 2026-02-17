@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Affecter un Freelancer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user-tie me-2"></i>Affecter un freelancer au chantier</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Chantier :</strong> {{ chantier.nom }}<br>
+                    <strong>Dates :</strong> {{ chantier.date_debut|date:"d/m/Y" }} - {{ chantier.date_fin|date:"d/m/Y" }}
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Freelancer</label>
+                        <select name="freelancer" class="form-control" required>
+                            <option value="">Sélectionnez un freelancer</option>
+                            {% for f in freelancers %}
+                            <option value="{{ f.id }}">{{ f.nom }} {{ f.prenom }} - {{ f.get_type_service_display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jours travaillés</label>
+                        <input type="number" name="jours_travailles" class="form-control" min="1" value="1" required>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Affecter
+                        </button>
+                        <a href="{% url 'detail_chantier' chantier.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

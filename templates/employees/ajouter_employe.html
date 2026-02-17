@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}Ajouter un Employé{% endblock %}
+
+{% block content %}
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card-header">
+        <h5><i class="fas fa-user-plus me-2"></i>Nouvel Employé</h5>
+    </div>
+     <div class="card-body">
+        <form method="post" enctype="multipart/form-data" id="employeForm">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Matricule</label>
+                    {{ form.matricule }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Photo</label>
+                    {{ form.photo }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Nom</label>
+                    {{ form.nom }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Prénom</label>
+                    {{ form.prenom }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">CIN</label>
+                    {{ form.cin }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Téléphone</label>
+                    {{ form.telephone }}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Adresse</label>
+                {{ form.adresse }}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date de naissance</label>
+                    {{ form.date_naissance }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date d'embauche</label>
+                    {{ form.date_embauche }}
+                </div>
+            </div>
+            
+            <!-- SECTION POSTE - Important -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Type de poste</label>
+                    {{ form.poste_choice }}
+                    <small class="text-muted">Sélectionnez "Autre" pour saisir un poste personnalisé</small>
+                </div>
+                <div class="col-md-6 mb-3" id="autre_poste_container">
+                    <label class="form-label">Autre poste</label>
+                    {{ form.poste_autre }}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Type de contrat</label>
+                    {{ form.type_contrat }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Salaire de base (TND)</label>
+                    {{ form.salaire_base }}
+                </div>
+            </div>
+            
+            
+            <div class="mb-3 form-check">
+                {{ form.actif }}
+                <label class="form-check-label">Employé actif</label>
+            </div>
+            
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Erreurs :</strong>
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Enregistrer
+                </button>
+                <a href="{% url 'liste_employes' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-2"></i>Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{% static 'js/employe_form.js' %}"></script>
+{% endblock %}

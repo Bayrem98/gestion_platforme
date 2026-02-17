@@ -1,0 +1,414 @@
+{% extends 'base.html' %}
+{% load gestion_extras %}
+
+{% block page_title %}Planning de {{ employe.nom }} {{ employe.prenom }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Style général */
+    .planning-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    /* En-tête du planning */
+    .planning-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .planning-header h3 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .planning-header h3 i {
+        color: #667eea;
+        margin-right: 10px;
+    }
+    
+    /* Navigation mois */
+    .month-navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-radius: 50px;
+        margin-bottom: 30px;
+    }
+    
+    .month-nav-btn {
+        background: white;
+        border: 1px solid #e0e0e0;
+        padding: 8px 20px;
+        border-radius: 25px;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .month-nav-btn:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .current-month {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    /* Calendrier - Version GRID */
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .calendar-day-header {
+        background: #667eea;
+        color: white;
+        text-align: center;
+        padding: 12px;
+        font-weight: 600;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+    
+    .calendar-day {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        min-height: 120px;
+        padding: 10px;
+        position: relative;
+        transition: all 0.2s;
+    }
+    
+    .calendar-day:hover {
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+        border-color: #667eea;
+    }
+    
+    .calendar-day.empty {
+        background: #f8f9fa;
+        border: 1px dashed #ddd;
+    }
+    
+    .calendar-day.today {
+        background: #fff3e0;
+        border: 2px solid #ff9800;
+    }
+    
+    .day-number {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 5px;
+    }
+    
+    .add-icon {
+        color: #999;
+        font-size: 0.8rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    
+    .calendar-day:hover .add-icon {
+        opacity: 1;
+    }
+    
+    /* Liste des plannings du jour */
+    .day-plannings {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        max-height: 80px;
+        overflow-y: auto;
+    }
+    
+    .planning-card {
+        background: #e8f5e9;
+        border-left: 3px solid #4caf50;
+        padding: 4px 6px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .planning-card:hover {
+        background: #c8e6c9;
+        transform: translateX(2px);
+    }
+    
+    .planning-time {
+        font-weight: 600;
+        color: #2e7d32;
+    }
+    
+    .planning-notes {
+        color: #666;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Bouton flottant */
+    .floating-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        transition: all 0.3s;
+        z-index: 1000;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .floating-btn:hover {
+        transform: scale(1.1) rotate(90deg);
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        color: white;
+    }
+    
+    /* Légende */
+    .legend {
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #e0e0e0;
+        flex-wrap: wrap;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+    }
+    
+    .legend-color.working {
+        background: #e8f5e9;
+        border-left: 3px solid #4caf50;
+    }
+    
+    .legend-color.today {
+        background: #fff3e0;
+        border: 2px solid #ff9800;
+    }
+    
+    /* Message quand aucun planning */
+    .no-plannings {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+    }
+    
+    .no-plannings i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .calendar-grid {
+            grid-template-columns: repeat(1, 1fr);
+        }
+        .calendar-day-header {
+            display: none;
+        }
+        .month-navigation {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+
+<div class="planning-container">
+    <!-- En-tête avec informations employé -->
+    <div class="planning-header">
+        <h3>
+            <i class="fas fa-calendar-alt"></i>
+            Planning de {{ employe.nom }} {{ employe.prenom }}
+        </h3>
+        <div>
+            <span class="badge bg-primary">{{ employe.matricule }}</span>
+            <span class="badge bg-info">{{ employe.poste_display }}</span>
+        </div>
+    </div>
+    
+    <!-- Navigation mois -->
+    <div class="month-navigation">
+        <a href="?annee={{ annee_precedente }}&mois={{ mois_precedent }}" class="month-nav-btn">
+            <i class="fas fa-chevron-left me-1"></i> {{ mois_precedent }}/{{ annee_precedente }}
+        </a>
+        <h4 class="current-month">
+            {{ mois_nom }} {{ annee }}
+        </h4>
+        <a href="?annee={{ annee_suivante }}&mois={{ mois_suivant }}" class="month-nav-btn">
+            {{ mois_suivant }}/{{ annee_suivante }} <i class="fas fa-chevron-right ms-1"></i>
+        </a>
+    </div>
+    
+    <!-- Calendrier -->
+    <div class="calendar-grid">
+        <!-- En-têtes des jours -->
+        {% for jour in jours_fr %}
+        <div class="calendar-day-header">{{ jour|slice:":3" }}</div>
+        {% endfor %}
+        
+        <!-- Jours du mois -->
+        {% for semaine in calendrier %}
+            {% for jour in semaine %}
+                {% if jour == 0 %}
+                    <div class="calendar-day empty"></div>
+                {% else %}
+                    {% with date_str=annee|stringformat:"04d"|add:"-"|add:mois|stringformat:"02d"|add:"-"|add:jour|stringformat:"02d" %}
+                    <div class="calendar-day {% if jour == today.day and mois == today.month and annee == today.year %}today{% endif %}">
+                        <div class="day-number">
+                            {{ jour }}
+                            <a href="{% url 'ajouter_planning_simple' employe.pk %}?date={{ annee }}-{{ mois|stringformat:'02d' }}-{{ jour|stringformat:'02d' }}" 
+                               class="add-icon" title="Ajouter un horaire">
+                                <i class="fas fa-plus-circle"></i>
+                            </a>
+                        </div>
+                        
+                        <div class="day-plannings">
+                            {# Vérification explicite #}
+                            {% if plannings_par_date and date_str in plannings_par_date %}
+                                {% with plannings_du_jour=plannings_par_date|get_item:date_str %}
+                                    {% for planning in plannings_du_jour %}
+                                    <div class="planning-card" onclick="location.href='{% url 'modifier_planning_simple' planning.pk %}'">
+                                        <div class="planning-time">
+                                            {{ planning.heure_debut|time:"H:i" }} - {{ planning.heure_fin|time:"H:i" }}
+                                        </div>
+                                        {% if planning.notes %}
+                                        <div class="planning-notes">
+                                            <i class="fas fa-comment"></i> {{ planning.notes|truncatechars:20 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                {% endwith %}
+                            {% else %}
+                                <div class="text-muted small text-center p-1">
+                                    <i class="far fa-clock"></i> Libre
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endwith %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+    
+    <!-- Légende -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color working"></div>
+            <span>Avec horaire</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color today"></div>
+            <span>Aujourd'hui</span>
+        </div>
+        <div class="legend-item">
+            <i class="fas fa-plus-circle text-success"></i>
+            <span>Ajouter un horaire</span>
+        </div>
+        <div class="legend-item">
+            <i class="fas fa-clock text-muted"></i>
+            <span>Jour libre</span>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau récapitulatif -->
+{% if plannings_par_date %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Récapitulatif du mois
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Jour</th>
+                                <th>Horaire</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for date_str, plannings in plannings_par_date.items %}
+                                {% for planning in plannings %}
+                                <tr>
+                                    <td>{{ planning.date|date:"d/m/Y" }}</td>
+                                    <td>{{ planning.date|date:"l" }}</td>
+                                    <td>{{ planning.heure_debut|time:"H:i" }} - {{ planning.heure_fin|time:"H:i" }}</td>
+                                    <td>{{ planning.notes|default:"-" }}</td>
+                                    <td>
+                                        <a href="{% url 'modifier_planning_simple' planning.pk %}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

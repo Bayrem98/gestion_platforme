@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Gestion des Employés{% endblock %}
+
+{% block content %}
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Liste des Employés</h5>
+            <a href="{% url 'ajouter_employe' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Nouvel Employé
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Filters -->
+        <div class="filters mb-4">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <select name="poste" class="form-select">
+                        <option value="">Tous les postes</option>
+                        {% for poste in postes %}
+                        <option value="{{ poste.id }}" {% if request.GET.poste == poste.id|stringformat:"i" %}selected{% endif %}>
+                            {{ poste.nom }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="actif" class="form-select">
+                        <option value="">Statut</option>
+                        <option value="true" {% if request.GET.actif == 'true' %}selected{% endif %}>Actif</option>
+                        <option value="false" {% if request.GET.actif == 'false' %}selected{% endif %}>Inactif</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Employees Table -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Matricule</th>
+                        <th>Nom & Prénom</th>
+                        <th>Poste</th>
+                        <th>Téléphone</th>
+                        <th>Date d'embauche</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employe in employes %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ employe.matricule }}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-2">
+                                    {% if employe.photo %}
+                                    <img src="{{ employe.photo.url }}" class="rounded-circle" width="40" height="40">
+                                    {% else %}
+                                    <div class="avatar-placeholder-sm">
+                                        {{ employe.prenom|first }}{{ employe.nom|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {{ employe.nom }} {{ employe.prenom }}
+                            </div>
+                        </td>
+                        <td>
+    {% if employe.poste_choice == 'AUTRE' %}
+        {{ employe.poste_autre }}
+    {% else %}
+        {{ employe.get_poste_choice_display }}
+    {% endif %}
+</td>
+                        <td>{{ employe.telephone }}</td>
+                        <td>{{ employe.date_embauche|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if employe.actif %}
+                            <span class="badge bg-success">Actif</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'detail_employe' employe.pk %}" class="btn btn-sm btn-info" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'modifier_employe' employe.pk %}" class="btn btn-sm btn-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'ajouter_avance' employe.pk %}" class="btn btn-sm btn-success" title="Avance">
+                                    <i class="fas fa-euro-sign"></i>
+                                </a>
+                               <a href="{% url 'planning_simple' employe.pk %}" class="btn btn-sm btn-info" title="Planning">
+    <i class="fas fa-calendar-alt"></i>
+</a>
+                                <button type="button" class="btn btn-sm btn-danger" title="Supprimer" 
+                onclick="confirmDelete('{{ employe.pk }}', '{{ employe.nom }} {{ employe.prenom }}')">
+            <i class="fas fa-trash"></i>
+        </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucun employé trouvé</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function confirmDelete(employeId, employeName) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer l'employé ${employeName} ?\nCette action est irréversible.`)) {
+        // Créer un formulaire pour la suppression
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/employes/${employeId}/supprimer/`;
+        
+        // Ajouter le token CSRF
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrfmiddlewaretoken';
+        csrf.value = '{{ csrf_token }}';
+        form.appendChild(csrf);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

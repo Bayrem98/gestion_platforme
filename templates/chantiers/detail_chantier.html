@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ chantier.nom }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-hard-hat fa-4x text-primary"></i>
+                </div>
+                <h4 class="text-center">{{ chantier.nom }}</h4>
+                <div class="text-center mb-3">
+                    <span class="badge {% if chantier.statut == 'EN_COURS' %}bg-success{% elif chantier.statut == 'TERMINE' %}bg-secondary{% elif chantier.statut == 'ANNULE' %}bg-danger{% else %}bg-warning{% endif %}">
+                        {{ chantier.get_statut_display }}
+                    </span>
+                    <span class="badge bg-info ms-2">{{ chantier.get_type_chantier_display }}</span>
+                </div>
+                
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'affecter_employe' chantier.pk %}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Affecter Employé
+                    </a>
+                    <a href="{% url 'affecter_freelancer' chantier.pk %}" class="btn btn-success">
+                        <i class="fas fa-user-tie me-2"></i>Affecter Freelancer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8 mb-4">
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header">
+                <h5>Informations du chantier</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th>Description:</th>
+                        <td>{{ chantier.description }}</td>
+                    </tr>
+                    <tr>
+                        <th>Dates:</th>
+                        <td>{{ chantier.date_debut|date:"d/m/Y" }} - {{ chantier.date_fin|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Lieu:</th>
+                        <td>{{ chantier.lieu }}</td>
+                    </tr>
+                    <tr>
+                        <th>Client:</th>
+                        <td>{{ chantier.client_nom }}<br>{{ chantier.client_telephone }}<br>{{ chantier.client_email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Montant total:</th>
+                        <td class="fw-bold text-success">{{ chantier.montant_total }} TND</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Employés affectés -->
+        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Employés affectés</h5>
+                <span class="badge bg-primary">{{ affectations_employes|length }}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Employé</th>
+                                <th>Poste</th>
+                                <th>Heures</th>
+                                <th>Prime</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for affectation in affectations_employes %}
+                            <tr>
+                                <td>{{ affectation.employe.nom }} {{ affectation.employe.prenom }}</td>
+                                <td>{{ affectation.employe.poste.nom }}</td>
+                                <td>{{ affectation.heures_travaillees }} h</td>
+                                <td>{{ affectation.prime_calculee }} TND</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">Aucun employé affecté</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Freelancers affectés -->
+        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Freelancers affectés</h5>
+                <span class="badge bg-success">{{ affectations_freelancers|length }}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Freelancer</th>
+                                <th>Service</th>
+                                <th>Jours</th>
+                                <th>Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for affectation in affectations_freelancers %}
+                            <tr>
+                                <td>{{ affectation.freelancer.nom }} {{ affectation.freelancer.prenom }}</td>
+                                <td>{{ affectation.freelancer.get_type_service_display }}</td>
+                                <td>{{ affectation.jours_travailles }} jours</td>
+                                <td>{{ affectation.montant_total }} TND</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">Aucun freelancer affecté</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transactions liées -->
+        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header">
+                <h5>Transactions liées</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Montant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>{{ transaction.date_transaction|date:"d/m/Y" }}</td>
+                                <td>
+                                    <span class="badge {% if transaction.type_transaction == 'RECETTE' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ transaction.get_type_transaction_display }}
+                                    </span>
+                                </td>
+                                <td>{{ transaction.description }}</td>
+                                <td>{{ transaction.montant }} TND</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">Aucune transaction</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

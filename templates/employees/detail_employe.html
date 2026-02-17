@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ employe.nom }} {{ employe.prenom }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    {% if employe.photo %}
+                        <img src="{{ employe.photo.url }}" class="rounded-circle" width="150" height="150" style="object-fit: cover;">
+                    {% else %}
+                        <div class="avatar-large mx-auto" style="width: 150px; height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; font-weight: bold;">
+                            {{ employe.prenom|first|upper }}{{ employe.nom|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                <h4>{{ employe.nom }} {{ employe.prenom }}</h4>
+                <p class="text-muted">{{ employe.matricule }}</p>
+                <span class="badge {% if employe.actif %}bg-success{% else %}bg-danger{% endif %} mb-3">
+                    {{ employe.actif|yesno:"Actif,Inactif" }}
+                </span>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'modifier_employe' employe.pk %}" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                    </a>
+                    <a href="{% url 'ajouter_avance' employe.pk %}" class="btn btn-success">
+                        <i class="fas fa-euro-sign me-2"></i>Avance sur salaire
+                    </a>
+                    <a href="{% url 'planning_simple' employe.pk %}" class="btn btn-info text-white">
+    <i class="fas fa-calendar-alt me-2"></i>Planning
+</a>
+                    <a href="{% url 'supprimer_employe' employe.pk %}" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Supprimer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8 mb-4">
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle me-2"></i>Informations détaillées</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 200px;">CIN:</th>
+                        <td>{{ employe.cin }}</td>
+                    </tr>
+                    <tr>
+                        <th>Adresse:</th>
+                        <td>{{ employe.adresse }}</td>
+                    </tr>
+                    <tr>
+                        <th>Téléphone:</th>
+                        <td>{{ employe.telephone }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date de naissance:</th>
+                        <td>{{ employe.date_naissance|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date d'embauche:</th>
+                        <td>{{ employe.date_embauche|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Poste:</th>
+                        <td>
+                            {% if employe.poste_choice == 'AUTRE' %}
+                                <strong>{{ employe.poste_autre }}</strong>
+                            {% else %}
+                                <strong>{{ employe.get_poste_choice_display }}</strong>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Type de contrat:</th>
+                        <td>{{ employe.get_type_contrat_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Salaire de base:</th>
+                        <td><strong class="text-success">{{ employe.salaire_base|floatformat:2 }} TND</strong></td>
+                    </tr>
+                    {% if employe.planning %}
+                    <tr>
+                        <th>Planning:</th>
+                        <td>{{ employe.planning|linebreaks }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+        
+        <!-- Avances sur salaire -->
+        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-euro-sign me-2"></i>Avances sur salaire</h5>
+                <a href="{% url 'ajouter_avance' employe.pk %}" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus-circle me-2"></i>Nouvelle avance
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Montant</th>
+                                <th>Motif</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for avance in avances %}
+                            <tr>
+                                <td>{{ avance.date_demande|date:"d/m/Y" }}</td>
+                                <td class="fw-bold text-danger">{{ avance.montant }} TND</td>
+                                <td>{{ avance.motif|truncatechars:30 }}</td>
+                                <td>
+                                    {% if avance.rembourse %}
+                                        <span class="badge bg-success">Remboursé</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">En cours</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    <i class="fas fa-info-circle me-2"></i>Aucune avance sur salaire
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Primes -->
+        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header">
+                <h5><i class="fas fa-gift me-2"></i>Primes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Chantier</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prime in primes %}
+                            <tr>
+                                <td>{{ prime.date_prime|date:"d/m/Y" }}</td>
+                                <td>{{ prime.chantier.nom|default:"-" }}</td>
+                                <td class="fw-bold text-success">{{ prime.montant }} TND</td>
+                                <td>
+                                    {% if prime.payee %}
+                                        <span class="badge bg-success">Payée</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Non payée</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    <i class="fas fa-info-circle me-2"></i>Aucune prime
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chantiers -->
+        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header">
+                <h5><i class="fas fa-hard-hat me-2"></i>Chantiers affectés</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Chantier</th>
+                                <th>Dates</th>
+                                <th>Heures</th>
+                                <th>Prime</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for affectation in chantiers %}
+                            <tr>
+                                <td>{{ affectation.chantier.nom }}</td>
+                                <td>{{ affectation.chantier.date_debut|date:"d/m/Y" }}</td>
+                                <td>{{ affectation.heures_travaillees }} h</td>
+                                <td>{{ affectation.prime_calculee }} TND</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    <i class="fas fa-info-circle me-2"></i>Aucun chantier affecté
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

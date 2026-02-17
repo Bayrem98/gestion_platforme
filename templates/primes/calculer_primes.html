@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Calcul automatique des primes{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header">
+                <h5><i class="fas fa-calculator me-2"></i>Calculer les primes</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Cette opération va calculer automatiquement les primes pour tous les employés 
+                    en fonction des heures travaillées sur les chantiers terminés.
+                </p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Mois</label>
+                            <select name="mois" class="form-control" required>
+                                <option value="">Sélectionnez</option>
+                                <option value="1">Janvier</option>
+                                <option value="2">Février</option>
+                                <option value="3">Mars</option>
+                                <option value="4">Avril</option>
+                                <option value="5">Mai</option>
+                                <option value="6">Juin</option>
+                                <option value="7">Juillet</option>
+                                <option value="8">Août</option>
+                                <option value="9">Septembre</option>
+                                <option value="10">Octobre</option>
+                                <option value="11">Novembre</option>
+                                <option value="12">Décembre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Année</label>
+                            <input type="number" name="annee" class="form-control" value="2026" min="2020" max="2030" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-calculator me-2"></i>Calculer les primes
+                        </button>
+                        <a href="{% url 'liste_primes' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

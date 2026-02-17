@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ freelancer.nom }} {{ freelancer.prenom }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-user-tie fa-5x text-primary mb-3"></i>
+                <h4>{{ freelancer.nom }} {{ freelancer.prenom }}</h4>
+                <p class="text-muted">{{ freelancer.get_type_service_display }}</p>
+                <span class="badge {% if freelancer.disponible %}bg-success{% else %}bg-danger{% endif %} mb-3">
+                    {{ freelancer.disponible|yesno:"Disponible,Indisponible" }}
+                </span>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'modifier_freelancer' freelancer.pk %}" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8 mb-4">
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header">
+                <h5>Informations détaillées</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th>CIN:</th>
+                        <td>{{ freelancer.cin }}</td>
+                    </tr>
+                    <tr>
+                        <th>Adresse:</th>
+                        <td>{{ freelancer.adresse }}</td>
+                    </tr>
+                    <tr>
+                        <th>Téléphone:</th>
+                        <td>{{ freelancer.telephone }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ freelancer.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Tarif journalier:</th>
+                        <td>{{ freelancer.tarif_journalier }} TND</td>
+                    </tr>
+                    <tr>
+                        <th>Date d'inscription:</th>
+                        <td>{{ freelancer.date_inscription|date:"d/m/Y" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Affectations aux chantiers -->
+        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header">
+                <h5>Chantiers affectés</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Chantier</th>
+                                <th>Jours travaillés</th>
+                                <th>Montant</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for affectation in affectations %}
+                            <tr>
+                                <td>{{ affectation.chantier.nom }}</td>
+                                <td>{{ affectation.jours_travailles }} jours</td>
+                                <td>{{ affectation.montant_total }} TND</td>
+                                <td>{{ affectation.date_affectation|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">Aucune affectation</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

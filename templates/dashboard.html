@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Gestion Platforme{% endblock %}
+
+{% block page_title %}Tableau de Bord{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_employes }}</h3>
+                <p>Employés Actifs</p>
+            </div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> +12%
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_freelancers }}</h3>
+                <p>Freelancers</p>
+            </div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> +5%
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <i class="fas fa-hard-hat"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ chantiers_actifs }}</h3>
+                <p>Chantiers Actifs</p>
+            </div>
+            <div class="stat-change">
+                <i class="fas fa-minus"></i> 2 en pause
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <i class="fas fa-euro-sign"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ caisse.solde_actuel|floatformat:2 }}TND</h3>
+                <p>Solde Caisse</p>
+            </div>
+            <div class="stat-change">
+                <i class="fas fa-clock"></i> Mis à jour
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Transactions -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-exchange-alt me-2"></i>Dernières Transactions</h5>
+                <a href="{% url 'liste_transactions' %}" class="btn-view-all">Voir tout</a>
+            </div>
+            <div class="card-body">
+               <div class="transaction-list">
+    {% for transaction in dernieres_transactions %}
+    <div class="transaction-item">
+        <div class="transaction-icon {% if transaction.type_transaction == 'RECETTE' %}success{% else %}danger{% endif %}">
+            <i class="fas {% if transaction.type_transaction == 'RECETTE' %}fa-arrow-down{% else %}fa-arrow-up{% endif %}"></i>
+        </div>
+        <div class="transaction-info">
+            <div class="transaction-title">{{ transaction.description|truncatechars:30 }}</div>
+            <div class="transaction-date">{{ transaction.date_transaction|date:"d/m/Y H:i" }}</div>
+        </div>
+        <div class="transaction-amount {% if transaction.type_transaction == 'RECETTE' %}success{% else %}danger{% endif %}">
+            {% if transaction.type_transaction == 'RECETTE' %}+{% else %}-{% endif %}{{ transaction.montant|floatformat:2 }}TND
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted text-center my-3">Aucune transaction récente</p>
+    {% endfor %}
+</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Employees -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user-plus me-2"></i>Nouveaux Employés</h5>
+                <a href="{% url 'liste_employes' %}" class="btn-view-all">Voir tout</a>
+            </div>
+            <div class="card-body">
+                <div class="employee-list">
+                    {% for employe in employes_recents %}
+                    <div class="employee-item">
+                        <div class="employee-avatar">
+                            {% if employe.photo %}
+                                <img src="{{ employe.photo.url }}" alt="{{ employe.nom }}">
+                            {% else %}
+                                <div class="avatar-placeholder">
+                                    {{ employe.prenom|first }}{{ employe.nom|first }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="employee-info">
+                            <div class="employee-name">{{ employe.nom }} {{ employe.prenom }}</div>
+                            <div class="employee-details">{{ employe.poste.nom }} - {{ employe.matricule }}</div>
+                        </div>
+                        <div class="employee-badge">
+                            <span class="badge bg-success">Actif</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center my-3">Aucun employé récent</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line me-2"></i>Évolution Financière</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="financeChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-pie-chart me-2"></i>Répartition des Dépenses</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="depensesChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="quick-actions">
+            <a href="{% url 'ajouter_employe' %}" class="btn btn-primary">
+                <i class="fas fa-user-plus me-2"></i>Nouvel Employé
+            </a>
+            <a href="{% url 'ajouter_chantier' %}" class="btn btn-success">
+                <i class="fas fa-plus-circle me-2"></i>Nouveau Chantier
+            </a>
+            <a href="{% url 'ajouter_transaction' %}" class="btn btn-info">
+                <i class="fas fa-euro-sign me-2"></i>Nouvelle Transaction
+            </a>
+            <a href="{% url 'calculer_primes' %}" class="btn btn-warning">
+                <i class="fas fa-calculator me-2"></i>Calculer Primes
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Finance Chart
+const ctx = document.getElementById('financeChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+        datasets: [{
+            label: 'Recettes',
+            data: [12000, 15000, 18000, 16000, 21000, 19000],
+            borderColor: '#4CAF50',
+            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Dépenses',
+            data: [8000, 9000, 11000, 9500, 13000, 12000],
+            borderColor: '#F44336',
+            backgroundColor: 'rgba(244, 67, 54, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Depenses Chart
+const ctx2 = document.getElementById('depensesChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+        labels: ['Salaires', 'Fournitures', 'Transport', 'Autres'],
+        datasets: [{
+            data: [45, 25, 20, 10],
+            backgroundColor: ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0']
+        }]
+    }
+});
+</script>
+{% endblock %}

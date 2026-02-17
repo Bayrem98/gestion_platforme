@@ -1,0 +1,154 @@
+{% extends 'base.html' %} {% block page_title %}Caisse & Finance{% endblock %}
+{% block content %}
+<!-- Caisse Summary -->
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div
+        class="stat-icon"
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+      >
+        <i class="fas fa-euro-sign"></i>
+      </div>
+      <div class="stat-details">
+        <h3>{{ caisse.solde_actuel|floatformat:2 }}TND</h3>
+        <p>Solde actuel</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div
+        class="stat-icon"
+        style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
+      >
+        <i class="fas fa-arrow-down"></i>
+      </div>
+      <div class="stat-details">
+        <h3>{{ recettes_mois|floatformat:2 }}TND</h3>
+        <p>Recettes du mois</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div
+        class="stat-icon"
+        style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+      >
+        <i class="fas fa-arrow-up"></i>
+      </div>
+      <div class="stat-details">
+        <h3>{{ depenses_mois|floatformat:2 }}TND</h3>
+        <p>Dépenses du mois</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Quick Actions -->
+  <div class="col-md-3 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5>Actions Rapides</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a href="{% url 'ajouter_transaction' %}" class="btn btn-success">
+            <i class="fas fa-plus-circle me-2"></i>Nouvelle Recette
+          </a>
+          <a href="{% url 'ajouter_transaction' %}" class="btn btn-danger">
+            <i class="fas fa-minus-circle me-2"></i>Nouvelle Dépense
+          </a>
+          <a href="#" class="btn btn-info">
+            <i class="fas fa-file-invoice me-2"></i>Rapport Mensuel
+          </a>
+          <a href="#" class="btn btn-warning">
+            <i class="fas fa-chart-pie me-2"></i>Analyse
+          </a>
+          <a href="{% url 'liste_transactions' %}" class="btn btn-info">
+            <i class="fas fa-list me-2"></i>Voir transactions
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="col-md-9 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5>Dernières Transactions</h5>
+          <a href="{% url 'liste_transactions' %}" class="btn-view-all"
+            >Voir tout</a
+          >
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Référence</th>
+                <th>Description</th>
+                <th>Catégorie</th>
+                <th>Montant</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for transaction in dernieres_transactions %}
+              <tr>
+                <td>{{ transaction.date_transaction|date:"d/m/Y H:i" }}</td>
+                <td>
+                  <span class="badge bg-secondary"
+                    >{{ transaction.reference }}</span
+                  >
+                </td>
+                <td>{{ transaction.description|truncatechars:30 }}</td>
+                <td>
+                  <span
+                    class="badge {% if transaction.type_transaction == 'RECETTE' %}bg-success{% else %}bg-danger{% endif %}"
+                  >
+                    {{ transaction.get_categorie_display }}
+                  </span>
+                </td>
+                <td
+                  class="{% if transaction.type_transaction == 'RECETTE' %}text-success{% else %}text-danger{% endif %}"
+                >
+                  <strong>
+                    {% if transaction.type_transaction == 'RECETTE' %}{% endif %} {{ transaction.montant|floatformat:2 }}TND
+                  </strong>
+                </td>
+                <td>
+                  {% if transaction.type_transaction == 'RECETTE' or transaction.type_transaction == 'DEPENSE' %} 
+                  <a
+                    href="{% url 'generer_recu' transaction.pk %}"
+                    class="btn btn-sm btn-outline-primary"
+                  >
+                    <i class="fas fa-print"></i>
+                  </a>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="text-center py-4">
+                  <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                  <p class="text-muted">Aucune transaction récente</p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

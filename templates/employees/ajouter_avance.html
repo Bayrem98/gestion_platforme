@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}Avance sur salaire{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-header">
+                <h5><i class="fas fa-euro-sign me-2"></i>Avance sur salaire</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Employé :</strong> {{ employe.nom }} {{ employe.prenom }}<br>
+                    <strong>Salaire de base :</strong> {{ employe.salaire_base }} TND
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Montant (TND)</label>
+                        <input type="number" name="montant" class="form-control" step="0.01" min="0" max="{{ employe.salaire_base }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motif</label>
+                        <textarea name="motif" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Valider l'avance
+                        </button>
+                        <a href="{% url 'detail_employe' employe.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

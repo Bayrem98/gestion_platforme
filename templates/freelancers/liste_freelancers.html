@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Gestion des Freelancers{% endblock %}
+
+{% block content %}
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-user-tie me-2"></i>Liste des Freelancers</h5>
+            <a href="{% url 'ajouter_freelancer' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Nouveau Freelancer
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nom & Prénom</th>
+                        <th>CIN</th>
+                        <th>Téléphone</th>
+                        <th>Service</th>
+                        <th>Tarif/Jour</th>
+                        <th>Disponibilité</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for freelancer in freelancers %}
+                    <tr>
+                        <td>{{ freelancer.nom }} {{ freelancer.prenom }}</td>
+                        <td>{{ freelancer.cin }}</td>
+                        <td>{{ freelancer.telephone }}</td>
+                        <td>{{ freelancer.get_type_service_display }}</td>
+                        <td>{{ freelancer.tarif_journalier }} TND</td>
+                        <td>
+                            {% if freelancer.disponible %}
+                                <span class="badge bg-success">Disponible</span>
+                            {% else %}
+                                <span class="badge bg-danger">Indisponible</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'detail_freelancer' freelancer.pk %}" class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'modifier_freelancer' freelancer.pk %}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">Aucun freelancer trouvé</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

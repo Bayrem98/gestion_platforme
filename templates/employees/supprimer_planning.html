@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Supprimer un horaire{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmation de suppression
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-4x text-danger mb-3"></i>
+                
+                <h4 class="mb-3">Êtes-vous sûr de vouloir supprimer ?</h4>
+                
+                <div class="alert alert-warning">
+                    <strong>{{ planning.get_jour_display }}</strong><br>
+                    {{ planning.heure_debut|time:"H:i" }} - {{ planning.heure_fin|time:"H:i" }}<br>
+                    Semaine du {{ planning.date_debut|date:"d/m/Y" }} au {{ planning.date_fin|date:"d/m/Y" }}
+                </div>
+                
+                <p class="text-muted">Cette action est irréversible.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>Oui, supprimer
+                        </button>
+                        <a href="{% url 'planning_employe' planning.employe.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

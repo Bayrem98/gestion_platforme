@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Gestion des Primes{% endblock %}
+
+{% block content %}
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-gift me-2"></i>Liste des Primes</h5>
+            <div>
+                <a href="{% url 'calculer_primes' %}" class="btn btn-success me-2">
+                    <i class="fas fa-calculator me-2"></i>Calculer automatique
+                </a>
+                <a href="{% url 'ajouter_prime' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>Ajouter manuelle
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Employé</th>
+                        <th>Chantier</th>
+                        <th>Montant</th>
+                        <th>Mois/Année</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prime in primes %}
+                    <tr>
+                        <td>{{ prime.employe.nom }} {{ prime.employe.prenom }}</td>
+                        <td>{{ prime.chantier.nom|default:"-" }}</td>
+                        <td class="fw-bold text-success">{{ prime.montant }} TND</td>
+                        <td>{{ prime.mois }}/{{ prime.annee }}</td>
+                        <td>{{ prime.date_prime|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if prime.payee %}
+                                <span class="badge bg-success">Payée</span>
+                            {% else %}
+                                <span class="badge bg-warning">Non payée</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not prime.payee %}
+                            <a href="{% url 'payer_prime' prime.pk %}" class="btn btn-sm btn-success">
+                                <i class="fas fa-check"></i> Payer
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">Aucune prime trouvée</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
