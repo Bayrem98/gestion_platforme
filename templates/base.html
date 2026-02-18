@@ -89,30 +89,22 @@
       </div>
 
       <div class="sidebar-footer">
-        <div class="user-info">
-          <i class="fas fa-user-circle"></i>
-          <div>
+    <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <div>
             <strong>{{ user.username }}</strong>
             <small>Administrateur</small>
-          </div>
         </div>
-        <form method="post" action="{% url 'logout' %}" style="display: inline">
-          {% csrf_token %}
-          <button
-            type="submit"
-            class="logout-btn"
-            style="
-              border: none;
-              background: none;
-              width: 100%;
-              text-align: left;
-            "
-          >
+    </div>
+    
+    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn" style="width: 100%; border: none; background: none; padding: 10px 15px; color: white; text-align: left; cursor: pointer;">
             <i class="fas fa-sign-out-alt"></i>
             Déconnexion
-          </button>
-        </form>
-      </div>
+        </button>
+    </form>
+</div>
     </div>
 
     <!-- Main Content -->

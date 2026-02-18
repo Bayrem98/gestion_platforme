@@ -6,6 +6,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-for-dev-only')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
 
 INSTALLED_APPS = [
@@ -88,7 +101,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-# Redirections
-LOGOUT_REDIRECT_URL = '/'
-LOGIN_URL = '/admin/login/'
-LOGIN_REDIRECT_URL = '/'
+# Login URLs
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'  # Redirige vers le dashboard après connexion
+LOGOUT_REDIRECT_URL = 'login'      # Redirige vers login après déconnexion

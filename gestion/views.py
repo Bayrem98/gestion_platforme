@@ -16,16 +16,20 @@ from .forms import PlanningSimpleForm
 
 @login_required
 def dashboard(request):
-    context = {
-        'total_employes': Employe.objects.filter(actif=True).count(),
-        'total_freelancers': Freelancer.objects.filter(disponible=True).count(),
-        'chantiers_actifs': Chantier.objects.filter(statut='EN_COURS').count(),
-        'caisse': Caisse.objects.first(),
-        'dernieres_transactions': Transaction.objects.order_by('-date_transaction')[:10],
-        'employes_recents': Employe.objects.order_by('-date_embauche')[:5],
-        'chantiers_recents': Chantier.objects.order_by('-date_debut')[:5],
-    }
-    return render(request, 'dashboard.html', context)
+    try:
+        context = {
+            'total_employes': Employe.objects.filter(actif=True).count(),
+            'total_freelancers': Freelancer.objects.filter(disponible=True).count(),
+            'chantiers_actifs': Chantier.objects.filter(statut='EN_COURS').count(),
+            'caisse': Caisse.objects.first(),
+            'dernieres_transactions': Transaction.objects.order_by('-date_transaction')[:10],
+            'employes_recents': Employe.objects.order_by('-date_embauche')[:5],
+            'chantiers_recents': Chantier.objects.order_by('-date_debut')[:5],
+        }
+        return render(request, 'dashboard.html', context)
+    except Exception as e:
+        print(f"Erreur dashboard: {e}")
+        return render(request, 'dashboard.html', {'error': str(e)})
 
 # Employees Views
 @login_required

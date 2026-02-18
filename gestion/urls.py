@@ -2,7 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Dashboard
     path('', views.dashboard, name='dashboard'),
+
     
     # Employees
     path('employes/', views.liste_employes, name='liste_employes'),
@@ -14,10 +16,10 @@ urlpatterns = [
     
     # Planning URLs
     path('employes/<int:pk>/planning-simple/', views.planning_simple, name='planning_simple'),
-path('employes/<int:pk>/planning-simple/ajouter/', views.ajouter_planning_simple, name='ajouter_planning_simple'),
-path('planning-simple/<int:pk>/modifier/', views.modifier_planning_simple, name='modifier_planning_simple'),
-path('planning-simple/<int:pk>/supprimer/', views.supprimer_planning_simple, name='supprimer_planning_simple'),
-path('employes/<int:pk>/test-planning/', views.test_planning, name='test_planning'),
+    path('employes/<int:pk>/planning-simple/ajouter/', views.ajouter_planning_simple, name='ajouter_planning_simple'),
+    path('planning-simple/<int:pk>/modifier/', views.modifier_planning_simple, name='modifier_planning_simple'),
+    path('planning-simple/<int:pk>/supprimer/', views.supprimer_planning_simple, name='supprimer_planning_simple'),
+    path('employes/<int:pk>/test-planning/', views.test_planning, name='test_planning'),
     
     # Freelancers
     path('freelancers/', views.liste_freelancers, name='liste_freelancers'),

@@ -7,8 +7,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    path('', include('gestion.urls')), 
-    path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('', include('gestion.urls')),  # Racine vers les URLs de gestion (ancienne config)
 ]
 
 if settings.DEBUG:
