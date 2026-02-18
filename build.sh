@@ -20,3 +20,5 @@ python manage.py collectstatic --no-input
 
 # Appliquer les migrations
 python manage.py migrate
+
+python manage.py ensure_admin
