@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: votre-projet-django
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn platforme.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: DATABASE_URL
+        fromDatabase:
+          name: votre-db
+          property: connectionString
+
+databases:
+  - type: postgresql
+    name: votre-db
+    databaseName: votredb
+    user: votreuser
