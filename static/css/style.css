@@ -22,6 +22,45 @@ body {
     min-height: 100vh;
 }
 
+/* Mode sombre */
+body.dark-mode {
+    background: #1a1a1a;
+    color: #f0f0f0;
+}
+
+body.dark-mode .card {
+    background: #2d2d2d;
+    color: #f0f0f0;
+    border-color: #404040;
+}
+
+body.dark-mode .card-header {
+    background: #363636;
+    border-bottom-color: #404040;
+}
+
+body.dark-mode .table {
+    color: #f0f0f0;
+}
+
+body.dark-mode .table td,
+body.dark-mode .table th {
+    border-color: #404040;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background: #363636;
+    border-color: #404040;
+    color: #f0f0f0;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background: #404040;
+    color: #fff;
+}
+
 /* Sidebar */
 .sidebar {
     width: 280px;

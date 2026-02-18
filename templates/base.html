@@ -163,16 +163,140 @@
                 </div>
               </div>
               <div class="dropdown-footer text-center p-2 border-top">
-                <a href="{% url 'liste_notifications' %}" class="text-primary small"
+                <a
+                  href="{% url 'liste_notifications' %}"
+                  class="text-primary small"
                   >Voir toutes les notifications</a
                 >
               </div>
             </div>
           </div>
+          <!-- NOUVEAU : Menu Paramètres/Utilitaires -->
+          <div class="dropdown">
+            <button
+              class="btn btn-light"
+              type="button"
+              id="settingsDropdown"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="fas fa-cog"></i>
+            </button>
+            <ul
+              class="dropdown-menu dropdown-menu-end"
+              aria-labelledby="settingsDropdown"
+              style="min-width: 250px"
+            >
+              <!-- Profil utilisateur -->
+              <li class="dropdown-header bg-light">
+                <div class="d-flex align-items-center p-2">
+                  <i class="fas fa-user-circle fa-2x me-2 text-primary"></i>
+                  <div>
+                    <strong
+                      >{{ user.get_full_name|default:user.username }}</strong
+                    ><br />
+                    <small class="text-muted">{{ user.email }}</small>
+                  </div>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
 
-          <button class="btn btn-light">
-            <i class="fas fa-cog"></i>
-          </button>
+              <!-- Actions rapides -->
+              <li><h6 class="dropdown-header">Actions rapides</h6></li>
+              <li>
+                <a class="dropdown-item" href="{% url 'ajouter_employe' %}">
+                  <i class="fas fa-user-plus me-2 text-success"></i>Nouvel
+                  employé
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'ajouter_chantier' %}">
+                  <i class="fas fa-hard-hat me-2 text-warning"></i>Nouveau
+                  chantier
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'ajouter_transaction' %}">
+                  <i class="fas fa-euro-sign me-2 text-info"></i>Nouvelle
+                  transaction
+                </a>
+              </li>
+
+              <li><hr class="dropdown-divider" /></li>
+
+              <!-- Outils -->
+              <li><h6 class="dropdown-header">Outils</h6></li>
+              <li>
+                <a class="dropdown-item" href="#" onclick="window.print()">
+                  <i class="fas fa-print me-2 text-secondary"></i>Imprimer cette
+                  page
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#" id="refreshData">
+                  <i class="fas fa-sync-alt me-2 text-primary"></i>Rafraîchir
+                  les données
+                </a>
+              </li>
+
+              <li><hr class="dropdown-divider" /></li>
+
+              <!-- Administration -->
+              <li><h6 class="dropdown-header">Administration</h6></li>
+              <li>
+                <a class="dropdown-item" href="{% url 'admin:index' %}">
+                  <i class="fas fa-crown me-2 text-warning"></i>Admin Django
+                </a>
+              </li>
+              <li>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  data-bs-toggle="modal"
+                  data-bs-target="#aideModal"
+                >
+                  <i class="fas fa-question-circle me-2 text-info"></i>Aide
+                </a>
+              </li>
+
+              <li><hr class="dropdown-divider" /></li>
+
+              <!-- Thème (optionnel) -->
+              <li>
+                <div
+                  class="dropdown-item d-flex justify-content-between align-items-center"
+                >
+                  <span
+                    ><i class="fas fa-moon me-2 text-primary"></i>Mode
+                    sombre</span
+                  >
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="darkModeSwitch"
+                    />
+                  </div>
+                </div>
+              </li>
+
+              <li><hr class="dropdown-divider" /></li>
+
+              <!-- Déconnexion rapide -->
+              <li>
+                <form
+                  method="post"
+                  action="{% url 'logout' %}"
+                  class="dropdown-item p-0"
+                >
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item text-danger">
+                    <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -202,5 +326,69 @@
     <!-- Script des notifications -->
     <script src="{% static 'js/notifications.js' %}"></script>
     {% block extra_js %}{% endblock %}
+    <!-- Modal d'aide -->
+    <div
+      class="modal fade"
+      id="aideModal"
+      tabindex="-1"
+      aria-labelledby="aideModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="aideModalLabel">
+              <i class="fas fa-question-circle me-2"></i>Aide - Gestion STAGE
+              PROD
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <h6>Bienvenue dans l'application de gestion</h6>
+            <p>Voici les principales fonctionnalités :</p>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <i class="fas fa-users text-primary me-2"></i
+                ><strong>Employés</strong> : Gérer les employés, avances sur
+                salaire
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-user-tie text-success me-2"></i
+                ><strong>Freelancers</strong> : Gérer les travailleurs
+                temporaires
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-hard-hat text-warning me-2"></i
+                ><strong>Chantiers</strong> : Gérer les projets et affectations
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-euro-sign text-info me-2"></i
+                ><strong>Finance</strong> : Gérer la caisse et les transactions
+              </li>
+              <li class="mb-2">
+                <i class="fas fa-calendar-alt text-danger me-2"></i
+                ><strong>Planning</strong> : Planifier les horaires des employés
+              </li>
+            </ul>
+            <hr />
+            <p class="small text-muted mb-0">Version 1.0 - © 2026 STAGE PROD</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
