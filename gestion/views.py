@@ -12,7 +12,9 @@ from .forms import RecuForm
 from calendar import monthcalendar, day_name
 from .models import PlanningSimple
 from .forms import PlanningSimpleForm
-
+from .utils import *
+from django.http import JsonResponse
+from django.utils import timezone
 
 @login_required
 def dashboard(request):
@@ -56,6 +58,7 @@ def ajouter_employe(request):
         form = EmployeForm(request.POST, request.FILES)
         if form.is_valid():
             employe = form.save()
+            notifier_nouvel_employe(employe)
             messages.success(request, f'Employé {employe.nom} {employe.prenom} ajouté avec succès!')
             return redirect('liste_employes')
         else:
@@ -120,6 +123,7 @@ def ajouter_avance(request, pk):
         # 3. Mettre à jour le solde de la caisse
         caisse.solde_actuel -= Decimal(montant)
         caisse.save()
+        notifier_avance_salaire(avance)
         
         messages.success(request, f'Avance sur salaire de {montant}TND enregistrée !')
         return redirect('detail_employe', pk=pk)
@@ -246,7 +250,7 @@ def ajouter_transaction(request):
         form = TransactionForm(request.POST, request.FILES)
         if form.is_valid():
             transaction = form.save()
-            
+            notifier_nouvelle_transaction(transaction)
             # Mettre à jour le solde de la caisse
             caisse = transaction.caisse
             if transaction.type_transaction == 'RECETTE':
@@ -332,7 +336,6 @@ def imprimer_recu(request, pk):
         }
     }
     return render(request, 'finance/imprimer_recu.html', context)
-
 
 @login_required
 def modifier_employe(request, pk):
@@ -436,7 +439,8 @@ def ajouter_chantier(request):
     if request.method == 'POST':
         form = ChantierForm(request.POST)
         if form.is_valid():
-            form.save()
+            chantier = form.save()
+            notifier_nouveau_chantier(chantier)
             messages.success(request, 'Chantier ajouté avec succès!')
             return redirect('liste_chantiers')
     else:
@@ -482,7 +486,8 @@ def ajouter_prime(request):
     if request.method == 'POST':
         form = PrimeForm(request.POST)
         if form.is_valid():
-            form.save()
+            prime = form.save()
+            notifier_prime_calculee(prime)
             messages.success(request, 'Prime ajoutée avec succès!')
             return redirect('liste_primes')
     else:
@@ -520,7 +525,6 @@ def liste_transactions(request):
     """Liste de toutes les transactions"""
     transactions = Transaction.objects.all().order_by('-date_transaction')
     return render(request, 'finance/liste_transactions.html', {'transactions': transactions})
-
 
 @login_required
 def planning_simple(request, pk):
@@ -606,6 +610,7 @@ def ajouter_planning_simple(request, pk):
             planning = form.save(commit=False)
             planning.employe = employe
             planning.save()
+            notifier_nouveau_planning(planning)
             messages.success(request, f'✅ Horaire ajouté pour le {planning.date.strftime("%d/%m/%Y")}')
             
             # Rediriger vers le planning avec le même mois que la date ajoutée
@@ -682,3 +687,97 @@ def test_planning(request, pk):
     
     html += "</table>"
     return HttpResponse(html)
+
+@login_required
+def get_notifications(request):
+    """API pour récupérer les notifications (AJAX)"""
+    # Récupérer les notifications non lues
+    notifications = Notification.objects.filter(est_lu=False, est_archive=False)[:10]
+    
+    # Compter le total non lu
+    non_lu_count = Notification.objects.filter(est_lu=False, est_archive=False).count()
+    
+    data = {
+        'count': non_lu_count,
+        'notifications': [
+            {
+                'id': n.id,
+                'titre': n.titre,
+                'message': n.message,
+                'type': n.type_notification,
+                'categorie': n.categorie,
+                'date': n.date_creation.strftime('%d/%m/%Y %H:%M'),
+                'lien': n.lien,
+                'icone': get_notification_icon(n.categorie, n.type_notification),
+                'time_ago': get_time_ago(n.date_creation)
+            }
+            for n in notifications
+        ]
+    }
+    return JsonResponse(data)
+
+@login_required
+def marquer_notification_lue(request, pk):
+    """Marquer une notification comme lue"""
+    try:
+        notification = Notification.objects.get(pk=pk)
+        notification.marquer_comme_lu()
+        return JsonResponse({'status': 'success'})
+    except Notification.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Notification non trouvée'}, status=404)
+
+@login_required
+def marquer_tout_lu(request):
+    """Marquer toutes les notifications comme lues"""
+    Notification.objects.filter(est_lu=False).update(
+        est_lu=True,
+        date_lecture=timezone.now()
+    )
+    return JsonResponse({'status': 'success'})
+
+@login_required
+def liste_notifications(request):
+    """Page de toutes les notifications"""
+    notifications = Notification.objects.filter(est_archive=False).order_by('-date_creation')
+    return render(request, 'notifications/liste.html', {'notifications': notifications})
+
+def get_notification_icon(categorie, type_notif):
+    """Retourne l'icône Font Awesome pour une notification"""
+    icons = {
+        'EMPLOYE': 'fas fa-user',
+        'FREELANCER': 'fas fa-user-tie',
+        'CHANTIER': 'fas fa-hard-hat',
+        'TRANSACTION': 'fas fa-euro-sign',
+        'PRIME': 'fas fa-gift',
+        'PLANNING': 'fas fa-calendar-alt',
+        'SYSTEME': 'fas fa-cog',
+    }
+    
+    colors = {
+        'SUCCESS': 'success',
+        'WARNING': 'warning',
+        'DANGER': 'danger',
+        'INFO': 'info',
+    }
+    
+    return {
+        'icon': icons.get(categorie, 'fas fa-bell'),
+        'color': colors.get(type_notif, 'info')
+    }
+
+def get_time_ago(date):
+    """Retourne le temps écoulé en français"""
+    from django.utils import timezone
+    now = timezone.now()
+    diff = now - date
+    
+    if diff.days > 0:
+        return f"Il y a {diff.days} jour{'s' if diff.days > 1 else ''}"
+    elif diff.seconds >= 3600:
+        heures = diff.seconds // 3600
+        return f"Il y a {heures} heure{'s' if heures > 1 else ''}"
+    elif diff.seconds >= 60:
+        minutes = diff.seconds // 60
+        return f"Il y a {minutes} minute{'s' if minutes > 1 else ''}"
+    else:
+        return "À l'instant"

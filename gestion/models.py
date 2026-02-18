@@ -286,3 +286,48 @@ class PlanningSimple(models.Model):
     
     def __str__(self):
         return f"{self.employe} - {self.date} ({self.heure_debut}-{self.heure_fin})"
+
+class Notification(models.Model):
+    TYPE_CHOICES = [
+        ('INFO', 'Information'),
+        ('SUCCESS', 'Succès'),
+        ('WARNING', 'Avertissement'),
+        ('DANGER', 'Important'),
+    ]
+    
+    CATEGORIE_CHOICES = [
+        ('EMPLOYE', 'Employé'),
+        ('FREELANCER', 'Freelancer'),
+        ('CHANTIER', 'Chantier'),
+        ('TRANSACTION', 'Transaction'),
+        ('PRIME', 'Prime'),
+        ('PLANNING', 'Planning'),
+        ('SYSTEME', 'Système'),
+    ]
+    
+    titre = models.CharField(max_length=200)
+    message = models.TextField()
+    type_notification = models.CharField(max_length=20, choices=TYPE_CHOICES, default='INFO')
+    categorie = models.CharField(max_length=20, choices=CATEGORIE_CHOICES, default='SYSTEME')
+    lien = models.CharField(max_length=200, blank=True, null=True, help_text="Lien vers la ressource concernée")
+    est_lu = models.BooleanField(default=False)
+    est_archive = models.BooleanField(default=False)
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_lecture = models.DateTimeField(null=True, blank=True)
+    
+    # Pour lier à des objets spécifiques
+    employe = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True, blank=True)
+    chantier = models.ForeignKey(Chantier, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-date_creation']
+    
+    def __str__(self):
+        return f"{self.titre} - {self.date_creation.strftime('%d/%m/%Y %H:%M')}"
+    
+    def marquer_comme_lu(self):
+        from django.utils import timezone
+        self.est_lu = True
+        self.date_lecture = timezone.now()
+        self.save()    

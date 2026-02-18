@@ -46,4 +46,10 @@ urlpatterns = [
     path('finance/transactions/', views.liste_transactions, name='liste_transactions'),
     path('finance/recu/<int:pk>/generer/', views.generer_recu, name='generer_recu'),
     path('finance/recu/<int:pk>/imprimer/', views.imprimer_recu, name='imprimer_recu'),
+
+    # Notifications
+    path('notifications/', views.liste_notifications, name='liste_notifications'),
+    path('notifications/api/', views.get_notifications, name='get_notifications'),
+    path('notifications/<int:pk>/lire/', views.marquer_notification_lue, name='marquer_notification_lue'),
+    path('notifications/tout-lire/', views.marquer_tout_lu, name='marquer_tout_lu'),
 ]

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Toutes les notifications{% endblock %}
+
+{% block content %}
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-bell me-2"></i>
+            Centre de notifications
+        </h5>
+        <button class="btn btn-success btn-sm" id="markAllRead">
+            <i class="fas fa-check-double me-2"></i>Tout marquer comme lu
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="list-group" id="notificationFullList">
+            {% for notification in notifications %}
+            <div class="list-group-item list-group-item-action {% if not notification.est_lu %}list-group-item-primary{% endif %}" 
+                 data-id="{{ notification.id }}">
+                <div class="d-flex w-100 justify-content-between align-items-start">
+                    <div class="d-flex align-items-start">
+                        <div class="me-3">
+                            <span class="badge 
+                                {% if notification.type_notification == 'SUCCESS' %}bg-success
+                                {% elif notification.type_notification == 'WARNING' %}bg-warning
+                                {% elif notification.type_notification == 'DANGER' %}bg-danger
+                                {% else %}bg-info{% endif %} p-3">
+                                <i class="{% if notification.categorie == 'EMPLOYE' %}fas fa-user
+                                         {% elif notification.categorie == 'FREELANCER' %}fas fa-user-tie
+                                         {% elif notification.categorie == 'CHANTIER' %}fas fa-hard-hat
+                                         {% elif notification.categorie == 'TRANSACTION' %}fas fa-euro-sign
+                                         {% elif notification.categorie == 'PRIME' %}fas fa-gift
+                                         {% elif notification.categorie == 'PLANNING' %}fas fa-calendar-alt
+                                         {% else %}fas fa-bell{% endif %} fa-lg"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">{{ notification.titre }}</h6>
+                            <p class="mb-1">{{ notification.message }}</p>
+                            <small class="text-muted">
+                                <i class="far fa-clock me-1"></i>{{ notification.date_creation|date:"d/m/Y H:i" }}
+                            </small>
+                            {% if notification.lien %}
+                            <a href="{{ notification.lien }}" class="btn btn-sm btn-link">
+                                <i class="fas fa-arrow-right me-1"></i>Voir
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        {% if not notification.est_lu %}
+                        <span class="badge bg-primary">Nouveau</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center p-5">
+                <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucune notification</h5>
+                <p class="text-muted">Les nouvelles notifications apparaîtront ici</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('markAllRead')?.addEventListener('click', function() {
+    fetch('/notifications/tout-lire/')
+        .then(() => {
+            location.reload();
+        });
+});
+
+// Marquer comme lu au clic
+document.querySelectorAll('.list-group-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        if (!e.target.closest('a')) {
+            const id = this.dataset.id;
+            fetch(`/notifications/${id}/lire/`)
+                .then(() => {
+                    this.classList.remove('list-group-item-primary');
+                    const badge = this.querySelector('.badge.bg-primary');
+                    if (badge) badge.remove();
+                });
+        }
+    });
+});
+</script>
+{% endblock %}
