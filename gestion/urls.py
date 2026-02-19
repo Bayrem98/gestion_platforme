@@ -52,4 +52,14 @@ urlpatterns = [
     path('notifications/api/', views.get_notifications, name='get_notifications'),
     path('notifications/<int:pk>/lire/', views.marquer_notification_lue, name='marquer_notification_lue'),
     path('notifications/tout-lire/', views.marquer_tout_lu, name='marquer_tout_lu'),
+
+    # URLs pour les factures
+path('chantiers/<int:pk>/factures/', views.liste_factures_chantier, name='liste_factures_chantier'),
+path('chantiers/<int:pk>/factures/creer/', views.creer_facture, name='creer_facture'),
+path('factures/<int:pk>/', views.detail_facture, name='detail_facture'),
+path('factures/<int:pk>/modifier/', views.modifier_facture, name='modifier_facture'),
+path('factures/<int:pk>/pdf/', views.generer_pdf_facture, name='generer_pdf_facture'),
+path('factures/<int:pk>/statut/<str:statut>/', views.changer_statut_facture, name='changer_statut_facture'),
+path('factures/<int:pk>/lignes/ajouter/', views.ajouter_ligne_facture, name='ajouter_ligne_facture'),
+path('lignes-facture/<int:pk>/supprimer/', views.supprimer_ligne_facture, name='supprimer_ligne_facture'),
 ]

@@ -144,3 +144,32 @@ class PlanningSimpleForm(forms.ModelForm):
             'heure_fin': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'notes': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Matinée, Après-midi...'}),
         }
+
+class FactureForm(forms.ModelForm):
+    class Meta:
+        model = Facture
+        fields = ['date_echeance', 'montant_ht', 'tva', 'notes', 'conditions']
+        widgets = {
+            'date_echeance': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'montant_ht': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'tva': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'value': 20.0}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'conditions': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['date_echeance'].required = True
+        self.fields['montant_ht'].required = True
+        self.fields['tva'].initial = 20.0
+        self.fields['conditions'].initial = "Paiement à réception sous 30 jours"
+
+class LigneFactureForm(forms.ModelForm):
+    class Meta:
+        model = LigneFacture
+        fields = ['description', 'quantite', 'prix_unitaire']
+        widgets = {
+            'description': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Description...'}),
+            'quantite': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+            'prix_unitaire': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+        }

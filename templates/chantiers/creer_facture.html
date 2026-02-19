@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}Nouvelle facture{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-invoice me-2"></i>
+                    Nouvelle facture pour {{ chantier.nom }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <h6>Informations du chantier</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Client:</strong> {{ chantier.client_nom }}<br>
+                            <strong>Téléphone:</strong> {{ chantier.client_telephone }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Email:</strong> {{ chantier.client_email }}<br>
+                            <strong>Lieu:</strong> {{ chantier.lieu }}
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Le montant HT est pré-rempli avec le montant total du chantier.
+                        Vous pourrez ajouter des lignes de facture détaillées après la création.
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Créer la facture
+                        </button>
+                        <a href="{% url 'detail_chantier' chantier.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

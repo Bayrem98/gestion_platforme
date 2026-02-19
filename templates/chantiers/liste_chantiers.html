@@ -3,10 +3,13 @@
 {% block page_title %}Gestion des Chantiers{% endblock %}
 
 {% block content %}
-<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+<div class="card">
     <div class="card-header">
         <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Liste des Chantiers</h5>
+            <h5 class="mb-0">
+                <i class="fas fa-hard-hat me-2"></i>Liste des Chantiers
+                <small class="text-muted ms-2">(Mis à jour automatiquement)</small>
+            </h5>
             <a href="{% url 'ajouter_chantier' %}" class="btn btn-primary">
                 <i class="fas fa-plus-circle me-2"></i>Nouveau Chantier
             </a>
@@ -16,7 +19,7 @@
         <!-- Filters -->
         <div class="filters mb-4">
             <form method="get" class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <select name="statut" class="form-select">
                         <option value="">Tous les statuts</option>
                         {% for code, label in statuts %}
@@ -26,7 +29,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <select name="type" class="form-select">
                         <option value="">Tous les types</option>
                         {% for code, label in types %}
@@ -36,7 +39,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fas fa-filter me-2"></i>Filtrer
                     </button>
@@ -44,61 +47,81 @@
             </form>
         </div>
 
-        <!-- Projects Grid -->
+        <!-- Liste des chantiers -->
         <div class="row">
             {% for chantier in chantiers %}
             <div class="col-md-6 col-lg-4 mb-4">
-                <div class="project-card">
-                    <div class="project-header">
+                <div class="card h-100 shadow-sm hover-shadow">
+                    <div class="card-header {% if chantier.statut == 'EN_COURS' %}bg-success text-white
+                                           {% elif chantier.statut == 'TERMINE' %}bg-secondary text-white
+                                           {% elif chantier.statut == 'ANNULE' %}bg-danger text-white
+                                           {% else %}bg-warning{% endif %}">
                         <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h5 class="project-title">{{ chantier.nom }}</h5>
-                                <span class="badge {% if chantier.statut == 'EN_COURS' %}bg-success{% elif chantier.statut == 'TERMINE' %}bg-secondary{% elif chantier.statut == 'ANNULE' %}bg-danger{% else %}bg-warning{% endif %} mb-2">
-                                    {{ chantier.get_statut_display }}
-                                </span>
-                            </div>
-                            <span class="project-type">{{ chantier.get_type_chantier_display }}</span>
+                            <h6 class="mb-0">{{ chantier.nom|truncatechars:30 }}</h6>
+                            <span class="badge bg-light text-dark">{{ chantier.get_type_chantier_display }}</span>
                         </div>
                     </div>
-                    
-                    <div class="project-body">
-                        <div class="project-info">
-                            <div class="info-item">
-                                <i class="fas fa-calendar"></i>
-                                <span>{{ chantier.date_debut|date:"d/m/Y" }} - {{ chantier.date_fin|date:"d/m/Y" }}</span>
+                    <div class="card-body">
+                        <!-- Barre de progression -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>Progression</small>
+                                <small>{{ chantier.progression }}%</small>
                             </div>
-                            <div class="info-item">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span>{{ chantier.lieu|truncatechars:30 }}</span>
-                            </div>
-                            <div class="info-item">
-                                <i class="fas fa-user"></i>
-                                <span>{{ chantier.client_nom }}</span>
-                            </div>
-                            <div class="info-item">
-                                <i class="fas fa-euro-sign"></i>
-                                <span>{{ chantier.montant_total|floatformat:2 }}TND</span>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-{{ chantier.statut_couleur }}" 
+                                     role="progressbar" 
+                                     style="width: {{ chantier.progression }}%;" 
+                                     aria-valuenow="{{ chantier.progression }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="project-stats">
-                            <div class="stat">
-                                <div class="stat-label">Employés</div>
-                                <div class="stat-value">{{ chantier.employes.count }}</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-label">Freelancers</div>
-                                <div class="stat-value">{{ chantier.freelancers.count }}</div>
-                            </div>
-                            <div class="stat">
-                                <div class="stat-label">Avancement</div>
-                                <div class="stat-value">75%</div>
-                            </div>
+                        <!-- Dates -->
+                        <div class="small mb-2">
+                            <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                            {{ chantier.date_debut|date:"d/m/Y" }} - {{ chantier.date_fin|date:"d/m/Y" }}
+                        </div>
+                        
+                        <!-- Lieu -->
+                        <div class="small mb-2">
+                            <i class="fas fa-map-marker-alt me-2 text-danger"></i>
+                            {{ chantier.lieu|truncatechars:30 }}
+                        </div>
+                        
+                        <!-- Client -->
+                        <div class="small mb-2">
+                            <i class="fas fa-user me-2 text-success"></i>
+                            {{ chantier.client_nom|truncatechars:20 }}
+                        </div>
+                        
+                        <!-- Montant -->
+                        <div class="small mb-2">
+                            <i class="fas fa-euro-sign me-2 text-warning"></i>
+                            {{ chantier.montant_total }} TND
+                        </div>
+                        
+                        <!-- Statut et jours restants -->
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="badge bg-{{ chantier.statut_couleur }} p-2">
+                                <i class="fas {% if chantier.statut == 'EN_COURS' %}fa-play
+                                               {% elif chantier.statut == 'TERMINE' %}fa-check
+                                               {% elif chantier.statut == 'ANNULE' %}fa-times
+                                               {% else %}fa-clock{% endif %} me-1"></i>
+                                {{ chantier.get_statut_display }}
+                            </span>
+                            {% if chantier.statut == 'EN_COURS' %}
+                                <small class="text-success">
+                                    <i class="fas fa-hourglass-half me-1"></i>
+                                    {{ chantier.jours_restants }} jour(s) restant(s)
+                                </small>
+                            {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="project-footer">
-                        <a href="{% url 'detail_chantier' chantier.pk %}" class="btn btn-outline-primary w-100">
+                    <div class="card-footer bg-transparent">
+                        <a href="{% url 'detail_chantier' chantier.pk %}" class="btn btn-outline-primary w-100 btn-sm">
                             <i class="fas fa-eye me-2"></i>Voir Détails
                         </a>
                     </div>
@@ -109,7 +132,6 @@
                 <div class="text-center py-5">
                     <i class="fas fa-hard-hat fa-4x text-muted mb-3"></i>
                     <h5 class="text-muted">Aucun chantier trouvé</h5>
-                    <p class="text-muted">Commencez par créer un nouveau chantier</p>
                     <a href="{% url 'ajouter_chantier' %}" class="btn btn-primary mt-3">
                         <i class="fas fa-plus-circle me-2"></i>Créer un chantier
                     </a>

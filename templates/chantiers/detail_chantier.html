@@ -3,75 +3,172 @@
 {% block page_title %}{{ chantier.nom }}{% endblock %}
 
 {% block content %}
+
 <div class="row">
+    <!-- Colonne de gauche - Informations principales -->
     <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <div class="text-center mb-3">
-                    <i class="fas fa-hard-hat fa-4x text-primary"></i>
-                </div>
-                <h4 class="text-center">{{ chantier.nom }}</h4>
-                <div class="text-center mb-3">
-                    <span class="badge {% if chantier.statut == 'EN_COURS' %}bg-success{% elif chantier.statut == 'TERMINE' %}bg-secondary{% elif chantier.statut == 'ANNULE' %}bg-danger{% else %}bg-warning{% endif %}">
+        <!-- Carte principale du chantier -->
+        <div class="card info-card">
+            <div class="card-body text-center">
+                <i class="fas fa-hard-hat fa-4x mb-3" style="color: rgba(255,255,255,0.8);"></i>
+                <h4 class="text-white">{{ chantier.nom }}</h4>
+                
+                <!-- Statut avec badge -->
+                <div class="mb-3">
+                    <span class="badge statut-badge {% if chantier.statut == 'EN_COURS' %}bg-success{% elif chantier.statut == 'TERMINE' %}bg-secondary{% elif chantier.statut == 'ANNULE' %}bg-danger{% else %}bg-warning{% endif %}">
+                        <i class="fas {% if chantier.statut == 'EN_COURS' %}fa-play{% elif chantier.statut == 'TERMINE' %}fa-check{% elif chantier.statut == 'ANNULE' %}fa-times{% else %}fa-clock{% endif %} me-1"></i>
                         {{ chantier.get_statut_display }}
                     </span>
-                    <span class="badge bg-info ms-2">{{ chantier.get_type_chantier_display }}</span>
+                    <span class="badge bg-info statut-badge ms-2">
+                        <i class="fas fa-tag me-1"></i>{{ chantier.get_type_chantier_display }}
+                    </span>
                 </div>
                 
-                <hr>
+                <!-- Barre de progression -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Progression</small>
+                        <small>{{ chantier.progression }}%</small>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-{{ chantier.statut_couleur }}" 
+                             role="progressbar" 
+                             style="width: {{ chantier.progression }}%;" 
+                             aria-valuenow="{{ chantier.progression }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
                 
+                <!-- Jours restants -->
+                <div class="mb-3">
+                    {% if chantier.statut == 'TERMINE' %}
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-check-circle me-1"></i>Chantier terminé
+                        </span>
+                    {% elif chantier.statut == 'EN_COURS' %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-hourglass-half me-1"></i>{{ chantier.jours_restants }} jour(s) restant(s)
+                        </span>
+                    {% elif chantier.statut == 'PREVU' %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-clock me-1"></i>Commence dans {{ chantier.jours_restants }} jour(s)
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <hr style="border-color: rgba(255,255,255,0.2);">
+                
+                <!-- Actions rapides -->
                 <div class="d-grid gap-2">
-                    <a href="{% url 'affecter_employe' chantier.pk %}" class="btn btn-primary">
-                        <i class="fas fa-user-plus me-2"></i>Affecter Employé
+                    <a href="{% url 'affecter_employe' chantier.pk %}" class="btn btn-light btn-action">
+                        <i class="fas fa-user-plus me-2 text-primary"></i>Affecter Employé
                     </a>
-                    <a href="{% url 'affecter_freelancer' chantier.pk %}" class="btn btn-success">
-                        <i class="fas fa-user-tie me-2"></i>Affecter Freelancer
+                    <a href="{% url 'affecter_freelancer' chantier.pk %}" class="btn btn-light btn-action">
+                        <i class="fas fa-user-tie me-2 text-success"></i>Affecter Freelancer
+                    </a>
+                    <a href="{% url 'creer_facture' chantier.pk %}" class="btn btn-light btn-action">
+                        <i class="fas fa-file-invoice me-2 text-warning"></i>Créer une facture
                     </a>
                 </div>
             </div>
         </div>
+        
+        <!-- Résumé financier -->
+        <div class="card info-card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Résumé financier</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td>Montant total:</td>
+                        <td class="text-end fw-bold">{{ chantier.montant_total }} TND</td>
+                    </tr>
+                    <tr>
+                        <td>Facturé:</td>
+                        <td class="text-end text-success">
+                            {% with total_facture=chantier.factures.all.0.montant_ttc %}
+                                {{ total_facture|default:"0" }} TND
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Payé:</td>
+                        <td class="text-end text-success">
+                            {% with total_paye=chantier.factures.all.0.montant_ttc %}
+                                {% if chantier.factures.all.0.statut == 'PAYEE' %}
+                                    {{ total_paye }} TND
+                                {% else %}
+                                    0 TND
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Employés:</td>
+                        <td class="text-end">{{ affectations_employes|length }}</td>
+                    </tr>
+                    <tr>
+                        <td>Freelancers:</td>
+                        <td class="text-end">{{ affectations_freelancers|length }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
     </div>
     
+    <!-- Colonne de droite - Détails -->
     <div class="col-md-8 mb-4">
-        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <!-- Informations du chantier -->
+        <div class="card info-card">
             <div class="card-header">
-                <h5>Informations du chantier</h5>
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations du chantier</h5>
             </div>
             <div class="card-body">
                 <table class="table">
                     <tr>
-                        <th>Description:</th>
+                        <th style="width: 150px;">Description:</th>
                         <td>{{ chantier.description }}</td>
                     </tr>
                     <tr>
                         <th>Dates:</th>
-                        <td>{{ chantier.date_debut|date:"d/m/Y" }} - {{ chantier.date_fin|date:"d/m/Y" }}</td>
+                        <td>
+                            <i class="fas fa-calendar-alt me-2"></i>{{ chantier.date_debut|date:"d/m/Y" }} 
+                            <i class="fas fa-arrow-right mx-2"></i> 
+                            {{ chantier.date_fin|date:"d/m/Y" }}
+                        </td>
                     </tr>
                     <tr>
                         <th>Lieu:</th>
-                        <td>{{ chantier.lieu }}</td>
+                        <td><i class="fas fa-map-marker-alt me-2"></i>{{ chantier.lieu }}</td>
                     </tr>
                     <tr>
                         <th>Client:</th>
-                        <td>{{ chantier.client_nom }}<br>{{ chantier.client_telephone }}<br>{{ chantier.client_email }}</td>
+                        <td>
+                            <i class="fas fa-user me-2"></i>{{ chantier.client_nom }}<br>
+                            <i class="fas fa-phone ms-4 me-2"></i>{{ chantier.client_telephone }}<br>
+                            <i class="fas fa-envelope ms-4 me-2"></i>{{ chantier.client_email }}
+                        </td>
                     </tr>
                     <tr>
                         <th>Montant total:</th>
-                        <td class="fw-bold text-success">{{ chantier.montant_total }} TND</td>
+                        <td class="fw-bold text-success h4">{{ chantier.montant_total }} TND</td>
                     </tr>
                 </table>
             </div>
         </div>
         
         <!-- Employés affectés -->
-        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card info-card mt-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5>Employés affectés</h5>
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Employés affectés</h5>
                 <span class="badge bg-primary">{{ affectations_employes|length }}</span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Employé</th>
@@ -83,14 +180,23 @@
                         <tbody>
                             {% for affectation in affectations_employes %}
                             <tr>
-                                <td>{{ affectation.employe.nom }} {{ affectation.employe.prenom }}</td>
-                                <td>{{ affectation.employe.poste.nom }}</td>
+                                <td>
+                                    <i class="fas fa-user-circle me-2"></i>
+                                    {{ affectation.employe.nom }} {{ affectation.employe.prenom }}
+                                </td>
+                                <td>{{ affectation.employe.poste_choice }}</td>
                                 <td>{{ affectation.heures_travaillees }} h</td>
-                                <td>{{ affectation.prime_calculee }} TND</td>
+                                <td class="text-success fw-bold">{{ affectation.prime_calculee }} TND</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center">Aucun employé affecté</td>
+                                <td colspan="4" class="text-center py-4">
+                                    <i class="fas fa-users fa-3x mb-3" style="opacity: 0.5;"></i>
+                                    <p>Aucun employé affecté</p>
+                                    <a href="{% url 'affecter_employe' chantier.pk %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-user-plus me-2"></i>Affecter un employé
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -100,14 +206,14 @@
         </div>
         
         <!-- Freelancers affectés -->
-        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card info-card mt-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5>Freelancers affectés</h5>
+                <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Freelancers affectés</h5>
                 <span class="badge bg-success">{{ affectations_freelancers|length }}</span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Freelancer</th>
@@ -119,14 +225,23 @@
                         <tbody>
                             {% for affectation in affectations_freelancers %}
                             <tr>
-                                <td>{{ affectation.freelancer.nom }} {{ affectation.freelancer.prenom }}</td>
+                                <td>
+                                    <i class="fas fa-user-circle me-2"></i>
+                                    {{ affectation.freelancer.nom }} {{ affectation.freelancer.prenom }}
+                                </td>
                                 <td>{{ affectation.freelancer.get_type_service_display }}</td>
                                 <td>{{ affectation.jours_travailles }} jours</td>
-                                <td>{{ affectation.montant_total }} TND</td>
+                                <td class="text-success fw-bold">{{ affectation.montant_total }} TND</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center">Aucun freelancer affecté</td>
+                                <td colspan="4" class="text-center py-4">
+                                    <i class="fas fa-user-tie fa-3x mb-3" style="opacity: 0.5;"></i>
+                                    <p>Aucun freelancer affecté</p>
+                                    <a href="{% url 'affecter_freelancer' chantier.pk %}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-user-plus me-2"></i>Affecter un freelancer
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -136,19 +251,20 @@
         </div>
         
         <!-- Transactions liées -->
-        <div class="card mt-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card info-card mt-4">
             <div class="card-header">
-                <h5>Transactions liées</h5>
+                <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Transactions liées</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Date</th>
                                 <th>Type</th>
                                 <th>Description</th>
                                 <th>Montant</th>
+                                <th>Référence</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -157,15 +273,22 @@
                                 <td>{{ transaction.date_transaction|date:"d/m/Y" }}</td>
                                 <td>
                                     <span class="badge {% if transaction.type_transaction == 'RECETTE' %}bg-success{% else %}bg-danger{% endif %}">
+                                        <i class="fas {% if transaction.type_transaction == 'RECETTE' %}fa-arrow-down{% else %}fa-arrow-up{% endif %} me-1"></i>
                                         {{ transaction.get_type_transaction_display }}
                                     </span>
                                 </td>
                                 <td>{{ transaction.description }}</td>
-                                <td>{{ transaction.montant }} TND</td>
+                                <td class="fw-bold {% if transaction.type_transaction == 'RECETTE' %}text-success{% else %}text-danger{% endif %}">
+                                    {{ transaction.montant }} TND
+                                </td>
+                                <td><small class="text-muted">{{ transaction.reference }}</small></td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center">Aucune transaction</td>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-exchange-alt fa-3x mb-3" style="opacity: 0.5;"></i>
+                                    <p>Aucune transaction liée à ce chantier</p>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -173,6 +296,87 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Factures du chantier (NOUVELLE SECTION) -->
+        <div class="card info-card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-file-invoice me-2 text-warning"></i>Factures du chantier</h5>
+                <a href="{% url 'creer_facture' chantier.pk %}" class="btn btn-sm btn-light">
+                    <i class="fas fa-plus-circle me-2"></i>Nouvelle facture
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for facture in chantier.factures.all %}
+                    <div class="col-md-6 mb-3">
+                        <div class="facture-item">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="badge bg-secondary">{{ facture.numero_facture }}</span>
+                                </div>
+                                <span class="badge bg-{{ facture.statut_couleur }}">
+                                    {{ facture.get_statut_display }}
+                                </span>
+                            </div>
+                            
+                            <div class="small mb-2">
+                                <i class="fas fa-calendar-alt me-1"></i> {{ facture.date_emission|date:"d/m/Y" }}
+                                <i class="fas fa-arrow-right mx-1"></i>
+                                {{ facture.date_echeance|date:"d/m/Y" }}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h5 mb-0 text-white">{{ facture.montant_ttc }} TND</span>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'detail_facture' facture.pk %}" class="btn btn-light" title="Voir détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'generer_pdf_facture' facture.pk %}" class="btn btn-success" title="Télécharger PDF">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                    {% if facture.statut != 'PAYEE' %}
+                                    <a href="{% url 'changer_statut_facture' facture.pk 'PAYEE' %}" 
+                                       class="btn btn-success" 
+                                       title="Marquer comme payée"
+                                       onclick="return confirm('Confirmer le paiement de cette facture ? Une transaction sera automatiquement créée dans la caisse.')">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if facture.jours_retard > 0 and facture.statut != 'PAYEE' %}
+                            <div class="mt-2">
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    {{ facture.jours_retard }} jours de retard
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-4">
+                        <i class="fas fa-file-invoice fa-4x mb-3" style="opacity: 0.5;"></i>
+                        <p>Aucune facture pour ce chantier</p>
+                        <a href="{% url 'creer_facture' chantier.pk %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus-circle me-2"></i>Créer la première facture
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Script pour mettre à jour le statut automatiquement (optionnel) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Actualiser la page toutes les 5 minutes pour mettre à jour les statuts
+    setTimeout(function() {
+        location.reload();
+    }, 300000); // 5 minutes
+});
+</script>
 {% endblock %}

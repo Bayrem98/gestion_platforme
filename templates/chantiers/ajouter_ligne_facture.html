@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}Ajouter une ligne à la facture{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Ajouter une ligne à la facture {{ facture.numero_facture }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Résumé de la facture -->
+                <div class="alert alert-info mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Facture N°:</strong> {{ facture.numero_facture }}<br>
+                            <strong>Client:</strong> {{ facture.client_nom }}<br>
+                            <strong>Chantier:</strong> {{ facture.chantier.nom }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Montant actuel:</strong> {{ facture.montant_ht }} TND<br>
+                            <strong>TVA:</strong> {{ facture.tva }}%<br>
+                            <strong>Total TTC:</strong> {{ facture.montant_ttc }} TND
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Description <span class="text-danger">*</span></label>
+                            <input type="text" name="description" class="form-control" 
+                                   placeholder="Ex: Prestation de service, Matériel, Main d'œuvre..." required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Quantité <span class="text-danger">*</span></label>
+                            <input type="number" name="quantite" class="form-control" 
+                                   step="0.01" min="0.01" value="1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Prix unitaire (TND) <span class="text-danger">*</span></label>
+                            <input type="number" name="prix_unitaire" class="form-control" 
+                                   step="0.01" min="0" value="0.00" required>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Le montant total de la ligne sera calculé automatiquement : Quantité × Prix unitaire
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Ajouter la ligne
+                        </button>
+                        <a href="{% url 'detail_facture' facture.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Aide -->
+        <div class="card mt-3">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Conseils</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Une facture peut avoir plusieurs lignes (ex: main d'œuvre, matériel, transport...)</li>
+                    <li>La quantité peut être en heures, jours, unités, etc.</li>
+                    <li>Le prix unitaire est en TND (Dinars Tunisiens)</li>
+                    <li>Vous pourrez modifier ou supprimer les lignes après les avoir ajoutées</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

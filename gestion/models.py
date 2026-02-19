@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
+from django.utils import timezone
+from datetime import date
 
 class Poste(models.Model):
     # Ajoutez des choix prédéfinis
@@ -134,6 +136,97 @@ class Chantier(models.Model):
     employes = models.ManyToManyField(Employe, through='AffectationChantier')
     freelancers = models.ManyToManyField(Freelancer, through='AffectationFreelancer')
     notes = models.TextField(blank=True)
+    
+    def mettre_a_jour_statut(self):
+        """
+        Met à jour le statut du chantier en fonction des dates
+        """
+        today = date.today()
+        
+        # Ne pas changer le statut si c'est "ANNULE"
+        if self.statut == 'ANNULE':
+            return self.statut
+        
+        # Calculer le nouveau statut
+        if today > self.date_fin:
+            nouveau_statut = 'TERMINE'
+        elif self.date_debut <= today <= self.date_fin:
+            nouveau_statut = 'EN_COURS'
+        else:
+            nouveau_statut = 'PREVU'
+        
+        # Mettre à jour si différent
+        if self.statut != nouveau_statut:
+            self.statut = nouveau_statut
+            self.save(update_fields=['statut'])
+        
+        return self.statut
+    
+    def save(self, *args, **kwargs):
+        """
+        Surcharge de la méthode save pour mettre à jour le statut automatiquement
+        """
+        # Mettre à jour le statut avant de sauvegarder
+        today = date.today()
+        
+        if not self.pk:  # Nouveau chantier
+            if self.statut != 'ANNULE':
+                if today > self.date_fin:
+                    self.statut = 'TERMINE'
+                elif self.date_debut <= today <= self.date_fin:
+                    self.statut = 'EN_COURS'
+                else:
+                    self.statut = 'PREVU'
+        else:  # Modification d'un chantier existant
+            if self.statut != 'ANNULE':
+                if today > self.date_fin:
+                    self.statut = 'TERMINE'
+                elif self.date_debut <= today <= self.date_fin:
+                    self.statut = 'EN_COURS'
+                else:
+                    self.statut = 'PREVU'
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def statut_couleur(self):
+        """
+        Retourne la couleur Bootstrap pour chaque statut
+        """
+        couleurs = {
+            'PREVU': 'warning',
+            'EN_COURS': 'success',
+            'TERMINE': 'secondary',
+            'ANNULE': 'danger',
+        }
+        return couleurs.get(self.statut, 'info')
+    
+    @property
+    def jours_restants(self):
+        """
+        Calcule le nombre de jours restants avant la fin
+        """
+        today = date.today()
+        if today > self.date_fin:
+            return 0
+        return (self.date_fin - today).days
+    
+    @property
+    def progression(self):
+        """
+        Calcule le pourcentage de progression du chantier
+        """
+        total_jours = (self.date_fin - self.date_debut).days
+        if total_jours <= 0:
+            return 100 if self.statut == 'TERMINE' else 0
+        
+        jours_ecoules = (date.today() - self.date_debut).days
+        if jours_ecoules < 0:
+            return 0
+        elif jours_ecoules > total_jours:
+            return 100
+        else:
+            return int((jours_ecoules / total_jours) * 100)
     
     def __str__(self):
         return f"{self.nom} - {self.date_debut}"
@@ -331,3 +424,129 @@ class Notification(models.Model):
         self.est_lu = True
         self.date_lecture = timezone.now()
         self.save()    
+
+class Facture(models.Model):
+    STATUT_CHOICES = [
+        ('BROUILLON', 'Brouillon'),
+        ('ENVOYEE', 'Envoyée'),
+        ('PAYEE', 'Payée'),
+        ('EN_RETARD', 'En retard'),
+        ('ANNULEE', 'Annulée'),
+    ]
+    
+    MODE_PAIEMENT_CHOICES = [
+        ('ESPECES', 'Espèces'),
+        ('CHEQUE', 'Chèque'),
+        ('VIREMENT', 'Virement bancaire'),
+        ('CARTE', 'Carte bancaire'),
+        ('AUTRE', 'Autre'),
+    ]
+    
+    numero_facture = models.CharField(max_length=50, unique=True, blank=True)
+    chantier = models.ForeignKey(Chantier, on_delete=models.CASCADE, related_name='factures')
+    date_emission = models.DateField(auto_now_add=True)  # ← Ce champ est automatique
+    date_echeance = models.DateField()
+    date_paiement = models.DateField(null=True, blank=True)
+    
+    # Montants
+    montant_ht = models.DecimalField(max_digits=12, decimal_places=2)
+    tva = models.DecimalField(max_digits=5, decimal_places=2, default=20.0)
+    montant_ttc = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    
+    # Détails
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='BROUILLON')
+    mode_paiement = models.CharField(max_length=20, choices=MODE_PAIEMENT_CHOICES, null=True, blank=True)
+    
+    # Informations client (au moment de la facture)
+    client_nom = models.CharField(max_length=200)
+    client_adresse = models.TextField()
+    client_telephone = models.CharField(max_length=20)
+    client_email = models.EmailField()
+    
+    # Informations société
+    societe_nom = models.CharField(max_length=200, default="STAGE PROD")
+    societe_adresse = models.TextField(default="123 Rue de l'Entreprise, 75000 Paris")
+    societe_telephone = models.CharField(max_length=20, default="01 23 45 67 89")
+    societe_email = models.EmailField(default="contact@stageprod.fr")
+    societe_siret = models.CharField(max_length=20, default="123 456 789 00012")
+    
+    # Documents
+    fichier_pdf = models.FileField(upload_to='factures/', blank=True, null=True)
+    
+    # Métadonnées
+    notes = models.TextField(blank=True, null=True)
+    conditions = models.TextField(default="Paiement à réception sous 30 jours")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-date_emission']
+    
+    def save(self, *args, **kwargs):
+        # Calculer le TTC si non défini
+        if not self.montant_ttc:
+            self.montant_ttc = self.montant_ht * (1 + self.tva / 100)
+        
+        # Générer le numéro de facture SEULEMENT si c'est une nouvelle facture
+        if not self.numero_facture:
+            from django.utils import timezone
+            # Utiliser la date actuelle si date_emission n'est pas encore définie
+            date = self.date_emission if self.date_emission else timezone.now().date()
+            annee = date.year
+            
+            # Compter les factures de l'année
+            last_facture = Facture.objects.filter(
+                date_emission__year=annee
+            ).order_by('-id').first()
+            
+            if last_facture and last_facture.numero_facture:
+                try:
+                    last_num = int(last_facture.numero_facture.split('-')[-1])
+                    new_num = last_num + 1
+                except (ValueError, IndexError, AttributeError):
+                    new_num = 1
+            else:
+                new_num = 1
+            
+            self.numero_facture = f"FAC-{annee}-{new_num:04d}"
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def jours_retard(self):
+        """Calcule le nombre de jours de retard"""
+        from datetime import date
+        if self.statut == 'PAYEE':
+            return 0
+        today = date.today()
+        if today > self.date_echeance:
+            return (today - self.date_echeance).days
+        return 0
+    
+    @property
+    def statut_couleur(self):
+        couleurs = {
+            'BROUILLON': 'secondary',
+            'ENVOYEE': 'info',
+            'PAYEE': 'success',
+            'EN_RETARD': 'danger',
+            'ANNULEE': 'dark',
+        }
+        return couleurs.get(self.statut, 'secondary')
+    
+    def __str__(self):
+        return f"{self.numero_facture} - {self.chantier.nom}"
+
+class LigneFacture(models.Model):
+    facture = models.ForeignKey(Facture, on_delete=models.CASCADE, related_name='lignes')
+    description = models.CharField(max_length=255)
+    quantite = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2)
+    montant = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def save(self, *args, **kwargs):
+        self.montant = self.quantite * self.prix_unitaire
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.description} - {self.montant}TND"
